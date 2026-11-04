@@ -265,7 +265,7 @@
        already facing the way you were walking and settling out from a slight zoom, so the two views overlap like a dolly shot;
      - jumping from the list or the plan: a slower cross-fade with a gentle zoom on the incoming place. */
   var sm = function (t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
-  function go(id, opts) {
+  function goNow(id, opts) {
     opts = opts || {};
     var d = byId[id];
     if (!d || busy) return;
@@ -317,7 +317,8 @@
       }, finish);
       setTimeout(function () { if (busy) finish(); }, dur + 400);      // safety: never stay locked
     }
-    loadStart(); waitStable(6000).then(loadDone);
+    if (!opts.preloaded) loadStart();
+    waitStable(6000).then(loadDone);
     current = d; seen[id] = true;
     document.body.classList.remove('is-home');
     $('#tour').hidden = false;
@@ -325,6 +326,48 @@
     s.els.forEach(function (h) { h.classList.remove('live'); void h.offsetWidth; h.classList.add('live'); });
     try { history.replaceState(null, '', '#' + id); } catch (e) { /* file:// */ }
     if (mq('(max-width:720px)')) setSide(false);
+  }
+
+  /* ---------- never show a place before its picture is in ----------
+     The next place is fetched first (its two lowest tile levels, which is what the viewer needs to draw a sharp first frame).
+     While that happens the bar (or the welcome button) fills with the real progress, the current markers fade away, and nothing
+     of the new place is shown. Only when the picture is here does the move start, and the new markers arrive with it. */
+  var loadedIds = {};
+  var FACES = ['f', 'b', 'l', 'r', 'u', 'd'];
+  function preload(id, onProgress) {
+    return new Promise(function (resolve) {
+      if (loadedIds[id]) { resolve(); return; }
+      var urls = [];
+      FACES.forEach(function (f) { urls.push('assets/tiles/' + id + '/0/' + f + '/0/0.jpg'); urls.push('assets/tiles/' + id + '/1/' + f + '/0/0.jpg'); });
+      var done = 0, finished = false;
+      function fin() { if (finished) return; finished = true; loadedIds[id] = true; resolve(); }
+      urls.forEach(function (u) {
+        var im = new Image();
+        im.crossOrigin = 'anonymous';
+        im.onload = im.onerror = function () { done++; onProgress(done / urls.length); if (done >= urls.length) fin(); };
+        im.src = u;
+      });
+      setTimeout(fin, 20000);          // a stalled request must not lock the tour forever
+    });
+  }
+  function go(id, opts) {
+    opts = opts || {};
+    if (!byId[id] || busy) return;
+    if (loadedIds[id]) { goNow(id, opts); return; }
+    var fromHome = !current || document.body.classList.contains('is-home');
+    var cta = $('#btnEnterText'), hideTimer = 0, cur = current && cache[current.id];
+    busy = true;
+    if (fromHome) { cta.classList.add('loading'); cta.style.setProperty('--p', 0.04); } else { loadStart(); }
+    hideTimer = setTimeout(function () {            // only if it is actually slow: the markers of the place you are leaving fade out
+      if (cur) { var hc = cur.scene.hotspotContainer().domElement(); hc.style.transition = 'opacity .25s'; hc.style.opacity = '0'; }
+    }, 350);
+    preload(id, function (p) { if (fromHome) cta.style.setProperty('--p', Math.max(0.04, p).toFixed(3)); else loadSet(Math.max(.06, p * .92)); }).then(function () {
+      clearTimeout(hideTimer);
+      cta.classList.remove('loading'); cta.style.removeProperty('--p');
+      if (cur) { var hc = cur.scene.hotspotContainer().domElement(); hc.style.transition = ''; hc.style.opacity = ''; }
+      busy = false;
+      goNow(id, { link: opts.link, instant: opts.instant, preloaded: !fromHome });
+    });
   }
 
   function goHome() {
