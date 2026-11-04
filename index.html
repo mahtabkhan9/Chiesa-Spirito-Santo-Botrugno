@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chiesa - Spirito Santo - Botrugno (Le) - Tour virtuale 360°</title>
+<meta name="description" content="Visita virtuale a 360° degli interni della Chiesa dello Spirito Santo a Botrugno (Lecce): navata, altare maggiore e altari laterali.">
+<meta name="theme-color" content="#d2c9c0">
+<link rel="preload" href="assets/fonts/marcellus.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" type="image/png" href="assets/img/domitalia360-cerchio.png">
+<link rel="stylesheet" href="css/style.css?v=43">
+</head>
+<body class="is-home">
+
+<div id="pano"></div>
+
+<!-- ============ Home ============ -->
+<main id="home">
+  <div class="home-photo" id="homeStage">
+    <img id="homeImg" src="assets/img/home.jpg" alt="">
+    <button type="button" class="door" id="btnEnter">
+      <span class="door-tag" id="enterLabel"></span>
+      <span class="door-mark" aria-hidden="true"><i class="i-arch"></i></span>
+    </button>
+  </div>
+
+  <button type="button" class="chip sq js-lang home-lang"></button>
+
+  <section class="home-panel">
+    <h1 id="homeTitle"></h1>
+    <button type="button" class="cta" id="btnEnterText"><span id="enterText"></span><i class="i-arch"></i></button>
+  </section>
+
+  <footer class="home-foot">
+    <p id="homeBiblio"></p>
+    <a id="homeCredit" target="_blank" rel="noopener"><img class="logo-on-light" src="assets/img/domitalia360-nero.png" alt="" width="52" height="29"><span></span></a>
+  </footer>
+</main>
+
+<!-- ============ Tour ============ -->
+<div id="tour" hidden>
+
+  <div id="topLeft">
+    <button type="button" id="btnSide" class="chip" aria-expanded="false" aria-controls="side"><i class="i-grid"></i><span id="sideLabel"></span></button>
+    <button type="button" id="btnHome" class="chip sq"><i class="i-home"></i></button>
+  </div>
+
+  <div id="bar" role="toolbar">
+    <button type="button" class="chip accent" id="btnDetail" hidden><i class="i-detail"></i><span></span></button>
+    <button type="button" class="chip sq" id="btnRotate" aria-pressed="true"><i class="i-pause"></i></button>
+    <button type="button" class="chip sq" id="btnFull"><i class="i-full"></i></button>
+    <button type="button" class="chip" id="btnMenu" aria-expanded="false" aria-controls="menu"><span id="menuLabel"></span><i class="i-list"></i></button>
+    <button type="button" class="chip sq js-lang"></button>
+  </div>
+
+  <div id="zoom" role="group">
+    <button type="button" class="chip sq" id="btnZoomIn"><i class="i-plus"></i></button>
+    <button type="button" class="chip sq" id="btnZoomOut"><i class="i-minus"></i></button>
+  </div>
+
+  <nav id="stepper">
+    <button type="button" class="chip sq" id="btnPrev"><i class="i-prev"></i></button>
+    <div class="st-mid">
+      <strong id="placeName"></strong>
+      <ol class="ticks" id="ticks" aria-hidden="true"></ol>
+    </div>
+    <button type="button" class="chip sq" id="btnNext"><i class="i-next"></i></button>
+  </nav>
+
+  <aside id="side" aria-hidden="true">
+    <header>
+      <img class="side-logo" src="assets/img/domitalia360-cerchio.png" alt="" width="40" height="40">
+      <button type="button" class="side-brand" id="sideBrand"><strong id="sideName"></strong></button>
+      <button type="button" class="chip sq small" id="sideClose"><i class="i-close"></i></button>
+    </header>
+    <nav id="sideList"></nav>
+  </aside>
+</div>
+
+
+  <aside id="menu" data-view="main" aria-hidden="true">
+    <section class="mn-main">
+      <header class="mn-head">
+        <h2 id="menuTitle"></h2>
+        <button type="button" class="chip sq small" id="menuClose"><i class="i-close"></i></button>
+      </header>
+      <nav class="mn-list">
+        <button type="button" class="mn-row" id="mnHome"><span class="mn-t"></span><span class="mn-go"><i class="i-next"></i></span></button>
+        <button type="button" class="mn-row" id="mnPlan"><span class="mn-t"></span><span class="mn-go"><i class="i-next"></i></span></button>
+        <button type="button" class="mn-row" id="mnPlaces"><span class="mn-t"></span><span class="mn-go"><i class="i-next"></i></span></button>
+      </nav>
+      <div class="mn-lang" role="group" id="mnLang">
+        <button type="button" data-l="it" lang="it">Italiano</button>
+        <button type="button" data-l="en" lang="en">English</button>
+      </div>
+      <footer class="mn-foot"><p id="mnBiblio"></p><a id="mnCredit" target="_blank" rel="noopener"><img src="assets/img/domitalia360-bianco.png" alt="" width="64" height="36"><span></span></a></footer>
+    </section>
+    <section class="mn-plan">
+      <header class="mn-head">
+        <button type="button" class="chip sq small" id="planBack"><i class="i-prev"></i></button>
+        <h2 id="planTitle"></h2>
+        <button type="button" class="chip sq small" id="planClose"><i class="i-close"></i></button>
+      </header>
+      <div class="plan-card">
+        <svg id="planSvg" viewBox="0 0 200 244" role="group"></svg>
+      </div>
+      <p class="plan-now" id="planNow"></p>
+      <p class="plan-note" id="planHint"></p>
+    </section>
+  </aside>
+
+<!-- ============ Details drawer ============ -->
+<div id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden data-kind="photo">
+  <header class="m-top">
+    <div>
+      <h2 id="drawerTitle"></h2>
+    </div>
+    <button type="button" class="chip sq" id="drawerClose"><i class="i-close"></i></button>
+  </header>
+  <div class="m-body">
+    <nav class="m-list"><ul class="stage-list" id="stageList"></ul></nav>
+    <div class="m-stage" id="mStage">
+      <button type="button" class="chip sq m-nav m-prev" id="mPrev"><i class="i-prev"></i></button>
+      <div class="stage" id="stage"></div>
+      <button type="button" class="chip sq m-nav m-next" id="mNext"><i class="i-next"></i></button>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/marzipano.js"></script>
+<script src="js/scenes.js?v=43"></script>
+<script src="js/app.js?v=43"></script>
+</body>
+</html>
