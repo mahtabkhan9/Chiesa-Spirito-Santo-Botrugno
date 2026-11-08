@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#d2c9c0">
 <link rel="preload" href="assets/fonts/marcellus.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" type="image/png" href="assets/img/domitalia360-cerchio.png">
-<link rel="stylesheet" href="css/style.css?v=44">
+<link rel="stylesheet" href="css/style.css?v=49">
 </head>
 <body class="is-home">
 
@@ -19,7 +19,7 @@
   <div class="home-photo" id="homeStage">
     <img id="homeImg" src="assets/img/home.jpg" alt="">
     <button type="button" class="door" id="btnEnter">
-      <span class="door-tag" id="enterLabel"></span>
+      <span class="door-tagwrap"><span class="door-tag" id="enterLabel"></span></span>
       <span class="door-mark" aria-hidden="true"><i class="i-arch"></i></span>
     </button>
   </div>
@@ -69,7 +69,7 @@
 
   <aside id="side" aria-hidden="true">
     <header>
-      <img class="side-logo" src="assets/img/domitalia360-cerchio.png" alt="" width="40" height="40">
+      <button type="button" class="side-logo" id="sideLogo"><img src="assets/img/domitalia360-cerchio.png" alt="" width="40" height="40"></button>
       <button type="button" class="side-brand" id="sideBrand"><strong id="sideName"></strong></button>
       <button type="button" class="chip sq small" id="sideClose"><i class="i-close"></i></button>
     </header>
@@ -128,7 +128,7 @@
 </div>
 
 <script src="vendor/marzipano.js"></script>
-<script src="js/scenes.js?v=44"></script>
-<script src="js/app.js?v=44"></script>
+<script src="js/scenes.js?v=50"></script>
+<script src="js/app.js?v=48"></script>
 </body>
 </html>

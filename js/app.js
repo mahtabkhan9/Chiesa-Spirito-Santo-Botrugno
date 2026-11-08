@@ -29,11 +29,11 @@
       details: 'Galleria', seeDetails: 'Apri la galleria', closeDetails: 'Chiudi la galleria', closeList: "Chiudi l'elenco",
       prev: 'Luogo precedente', next: 'Luogo successivo', stop: function (n, t) { return 'Punto ' + n + ' di ' + t; },
       zoomIn: 'Ingrandisci', zoomOut: 'Riduci', rotOn: 'Ferma la rotazione automatica', rotOff: 'Avvia la rotazione automatica',
-      full: 'Schermo intero', play: 'Riproduci', pause: 'Pausa', mute: 'Disattiva audio', unmute: 'Attiva audio', seek: 'Posizione del video', replay: 'Rivedi',
+      full: 'Schermo intero', fullExit: 'Esci dallo schermo intero', play: 'Riproduci', pause: 'Pausa', mute: 'Disattiva audio', unmute: 'Attiva audio', seek: 'Posizione del video', replay: 'Rivedi',
       video: 'Video', photo: 'Foto', items: function (n) { return n === 1 ? '1 contenuto' : n + ' contenuti'; },
       pano: 'Panorama a 360°. Trascina per guardarti intorno.', homeAlt: 'Veduta aerea della chiesa e del centro storico di Botrugno',
       prevItem: 'Contenuto precedente', nextItem: 'Contenuto successivo',
-      menu: 'Menu', menuPlan: 'Pianta della chiesa', menuPlaces: 'Tutti i luoghi', menuGallery: 'Galleria', menuHome: 'Home', back: 'Indietro', closeMenu: 'Chiudi il menu',
+      menu: 'Menu', menuPlan: 'Pianta della chiesa', menuPlaces: 'Tutti i luoghi', menuGallery: 'Galleria', menuHome: 'Entra qui', info: 'Storia della chiesa', back: 'Indietro', closeMenu: 'Chiudi il menu',
       planNote: 'Pianta indicativa, non in scala. Tocca un punto per andarci.', youAreHere: 'Sei qui',
       other: 'EN', otherLabel: 'Switch to English'
     },
@@ -42,17 +42,17 @@
       details: 'Gallery', seeDetails: 'Open the gallery', closeDetails: 'Close the gallery', closeList: 'Close the list',
       prev: 'Previous place', next: 'Next place', stop: function (n, t) { return 'Stop ' + n + ' of ' + t; },
       zoomIn: 'Zoom in', zoomOut: 'Zoom out', rotOn: 'Stop automatic rotation', rotOff: 'Start automatic rotation',
-      full: 'Full screen', play: 'Play', pause: 'Pause', mute: 'Mute', unmute: 'Unmute', seek: 'Video position', replay: 'Watch again',
+      full: 'Full screen', fullExit: 'Exit full screen', play: 'Play', pause: 'Pause', mute: 'Mute', unmute: 'Unmute', seek: 'Video position', replay: 'Watch again',
       video: 'Video', photo: 'Photo', items: function (n) { return n === 1 ? '1 item' : n + ' items'; },
       pano: '360° panorama. Drag to look around.', homeAlt: 'Aerial view of the church and the old town of Botrugno',
       prevItem: 'Previous item', nextItem: 'Next item',
-      menu: 'Menu', menuPlan: 'Church plan', menuPlaces: 'All places', menuGallery: 'Gallery', menuHome: 'Home', back: 'Back', closeMenu: 'Close the menu',
+      menu: 'Menu', menuPlan: 'Church plan', menuPlaces: 'All places', menuGallery: 'Gallery', menuHome: 'Enter here', info: 'History of the church', back: 'Back', closeMenu: 'Close the menu',
       planNote: 'Indicative plan, not to scale. Select a point to go there.', youAreHere: 'You are here',
       other: 'IT', otherLabel: "Passa all'italiano"
     }
   };
   var lang = 'it';
-  try { var q = /[?&]lang=(it|en)/.exec(location.search); lang = (q && q[1]) || localStorage.getItem('lang') || 'it'; } catch (e) { }
+  try { var q = /[?&]lang=(it|en)/.exec(location.search); lang = (q && q[1]) || 'it'; } catch (e) { }   // Italian on every first visit
   if (!UI[lang]) lang = 'it';
   var L = function (k) { return UI[lang][k]; };
   var nm = function (d) { return lang === 'en' ? d.nameEn : d.name; };
@@ -85,7 +85,7 @@
     $$('#mnLang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-l') === lang)); });
     refreshPlanText();
     setText('#sideLabel', L('places')); setText('#sideName', T.name);
-    setAria('#btnHome', L('home')); setAria('#btnSide', L('placesAria')); setAria('#sideClose', L('closeList'));
+    setAria('#btnHome', L('home')); setAria('#sideLogo', L('home')); setAria('#sideBrand', L('home')); setAria('#btnSide', L('placesAria')); setAria('#sideClose', L('closeList'));
     $('#side').setAttribute('aria-label', L('placesAria'));
     setText('#btnDetail span', L('details')); setAria('#btnDetail', L('details'));
     setAria('#btnPrev', L('prev')); setAria('#btnNext', L('next'));
@@ -100,7 +100,7 @@
     if (drawerFor) { var at = $$('#stageList button').findIndex(function (b) { return b.getAttribute('aria-current') === 'true'; }); fillDrawer(drawerFor, Math.max(0, at)); }
     placeDoor();
   }
-  function setLang(l) { lang = l; try { localStorage.setItem('lang', l); } catch (e) { } applyLang(); }
+  function setLang(l) { lang = l; applyLang(); }
   $$('.js-lang').forEach(function (b) { b.addEventListener('click', function () { setLang(lang === 'it' ? 'en' : 'it'); }); });
 
   /* ============================================================ home: the pin sits on the central door */
@@ -154,9 +154,16 @@
       entry.els.push(h);
     });
     if (d.detail && d.media.length) {
-      var h = detailHotspot(d);
-      scene.hotspotContainer().createHotspot(h, { yaw: d.detail.yaw, pitch: d.detail.pitch });
-      entry.els.push(h);
+      [].concat(d.detail).forEach(function (pos) {
+        var h = detailHotspot(d, pos.item || 0);
+        scene.hotspotContainer().createHotspot(h, { yaw: pos.yaw, pitch: pos.pitch });
+        entry.els.push(h);
+      });
+    }
+    if (d.info) {
+      var hi = infoHotspot(d.info);
+      scene.hotspotContainer().createHotspot(hi, { yaw: d.info.yaw, pitch: d.info.pitch });
+      entry.els.push(hi);
     }
     view.addEventListener('change', function () { if (current && current.id === id) { updateCone(); queueLabels(); } });
     return (cache[id] = entry);
@@ -178,7 +185,12 @@
     return h;
   }
   function linkHotspot(l) { return hotspot('link', function () { return nm(byId[l.to]); }, 'i-up', 'assets/thumbs/' + l.to + '.jpg', function () { go(l.to, { link: l }); }); }
-  function detailHotspot(d) { return hotspot('detail', function () { return L('seeDetails'); }, 'i-detail', null, function () { openDrawer(d); }); }
+  function detailHotspot(d, item) { return hotspot('detail', function () { return L('seeDetails'); }, 'i-detail', null, function () { openDrawer(d, item); }); }
+  /* the "i" hotspot: a pop-up with one video only (no list), shown with the drawer in its single-item layout */
+  function infoHotspot(info) {
+    var pseudo = { name: info.label, nameEn: info.labelEn, media: [{ label: info.label, labelEn: info.labelEn, photo: info.poster, video: info.video, subtitles: info.subtitles, wide: info.wide }] };
+    return hotspot('info', function () { return lang === 'en' ? info.labelEn : info.label; }, 'i-info', null, function () { openDrawer(pseudo, 0); });
+  }
 
   /* ---------- loading effect: the middle of the previous/next bar fills while a new place loads ---------- */
   var mid = $('.st-mid'), loadP = 0, loadTimer = 0, loadTick = 0, stableWaiters = [];
@@ -278,7 +290,7 @@
 
     var s = getScene(id), view = s.scene.view(), fov = startFov();
     var yaw = walking ? wrap(rad(from.heading) + link.yaw - rad(d.heading)) : d.view.yaw;
-    var pitch = walking ? Math.max(-0.1, Math.min(0.1, d.view.pitch)) : d.view.pitch;
+    var pitch = walking ? (d.walkPitch != null ? d.walkPitch : Math.max(-0.1, Math.min(0.1, d.view.pitch))) : d.view.pitch;
     var oldEntry = (!instant && from && cache[from.id]) ? cache[from.id] : null;
 
     function finish() {
@@ -425,6 +437,7 @@
       a.links.forEach(function (l) {
         var b = byId[l.to]; if (!b) return;
         var key = [a.id, b.id].sort().join('|'); if (drawn[key]) return; drawn[key] = 1;
+        if ((T.planHide || []).indexOf(key) >= 0) return;
         var p = P(a.plan.x, a.plan.y), q = P(b.plan.x, b.plan.y);
         g('line', { 'class': 'pl-edge', x1: p[0], y1: p[1], x2: q[0], y2: q[1] });
       });
@@ -528,6 +541,7 @@
   $('#btnSide').addEventListener('click', function () { setSide(true); $('#sideClose').focus(); });
   $('#sideClose').addEventListener('click', function () { setSide(false); $('#btnSide').focus(); });
   $('#sideBrand').addEventListener('click', goHome);
+  $('#sideLogo').addEventListener('click', goHome);
   $('#btnHome').addEventListener('click', goHome);
 
   /* ============================================================ current place: stepper and list */
@@ -594,15 +608,22 @@
 
   function buildPlayer(m) {
     var box = el('div', 'player');
-    var v = el('video'); v.playsInline = true; v.preload = 'metadata'; v.poster = 'assets/media/' + m.photo; v.src = 'assets/media/' + m.video;
+    var v = el('video'); v.playsInline = true; v.preload = 'metadata'; if (m.photo) v.poster = 'assets/media/' + m.photo;
+    v.src = 'assets/media/' + m.video;
+    if (m.subtitles) {      // the subtitles are a separate WebVTT file: browsers do not show the text track embedded in the mp4
+      var tr = el('track'); tr.kind = 'subtitles'; tr.srclang = 'it'; tr.label = 'Italiano'; tr.src = 'assets/media/' + m.subtitles; tr['default'] = true;
+      v.appendChild(tr);
+      if (v.textTracks[0]) v.textTracks[0].mode = 'showing';
+    }
     v.setAttribute('aria-label', lb(m));
     var big = el('button', 'p-big', '<i class="i-play"></i>'); big.type = 'button';
     var bar = el('div', 'p-bar');
     bar.innerHTML = '<div class="p-seek"><input type="range" min="0" max="1000" step="1" value="0"><span class="p-track"><span class="p-fill"></span></span><span class="p-knob"></span></div>' +
       '<div class="p-row"><button type="button" class="p-btn p-play"><i class="i-play"></i></button><span class="p-time"><span class="p-cur">0:00</span> / <span class="p-dur">0:00</span></span><span class="grow"></span>' +
-      '<button type="button" class="p-btn p-mute"><i class="i-sound"></i></button></div>';
+      '<button type="button" class="p-btn p-mute"><i class="i-sound"></i></button>' +
+      '<button type="button" class="p-btn p-full"><i class="i-full"></i></button></div>';
     box.appendChild(v); box.appendChild(big); box.appendChild(bar);
-    var play = $('.p-play', bar), mute = $('.p-mute', bar), seek = $('input', bar), seekBox = $('.p-seek', bar), cur = $('.p-cur', bar), dur = $('.p-dur', bar);
+    var play = $('.p-play', bar), mute = $('.p-mute', bar), full = $('.p-full', bar), seek = $('input', bar), seekBox = $('.p-seek', bar), cur = $('.p-cur', bar), dur = $('.p-dur', bar);
     var idleT = 0;
 
     function labels() {
@@ -612,6 +633,8 @@
       big.firstChild.className = ended ? 'i-replay' : 'i-play';
       play.firstChild.className = playing ? 'i-pause' : (ended ? 'i-replay' : 'i-play');
       mute.setAttribute('aria-label', v.muted ? L('unmute') : L('mute'));
+      var inFs = fsElement() === box;
+      full.setAttribute('aria-label', inFs ? L('fullExit') : L('full')); full.title = full.getAttribute('aria-label'); full.setAttribute('aria-pressed', String(inFs));
       mute.firstChild.className = v.muted ? 'i-mute' : 'i-sound';
       seek.setAttribute('aria-label', L('seek'));
       box.classList.toggle('playing', playing);
@@ -623,6 +646,18 @@
       seekBox.style.setProperty('--p', (p * 100).toFixed(2) + '%');
       seek.value = Math.round(p * 1000); cur.textContent = fmt(v.currentTime); dur.textContent = fmt(d);
     }
+    /* full screen for the video: the player box goes full screen (the video is shown whole, with the controls and subtitles);
+       iPhones cannot full-screen an element, so there the video's own native full screen is used */
+    function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+    var canFs = !!(box.requestFullscreen || box.webkitRequestFullscreen || v.webkitEnterFullscreen);
+    full.hidden = !canFs;
+    full.addEventListener('click', function () {
+      if (fsElement() === box) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      var req = box.requestFullscreen || box.webkitRequestFullscreen;
+      if (req) { var r = req.call(box); if (r && r.catch) r.catch(function () { if (v.webkitEnterFullscreen) v.webkitEnterFullscreen(); }); }
+      else if (v.webkitEnterFullscreen) v.webkitEnterFullscreen();
+    });
+    ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (e) { document.addEventListener(e, function () { if (box.isConnected) { labels(); wake(); } }); });
     big.addEventListener('click', toggle); play.addEventListener('click', toggle); v.addEventListener('click', toggle);
     mute.addEventListener('click', function () { v.muted = !v.muted; });
     seek.addEventListener('input', function () { if (v.duration) { v.currentTime = v.duration * seek.value / 1000; progress(); } });
@@ -640,7 +675,8 @@
     var old = $('video', stage); if (old) old.pause();
     stage.innerHTML = '';
     drawer.setAttribute('data-kind', m.video ? 'video' : 'photo');
-    drawer.style.setProperty('--bg', 'url("../assets/media/' + m.photo + '")');
+    if (m.photo) drawer.style.setProperty('--bg', 'url("../assets/media/' + m.photo + '")');
+    stage.classList.toggle('wide', !!m.wide);
     var frame = el('div', 'frame');
     if (m.video) frame.appendChild(buildPlayer(m));
     else { var img = el('img'); img.src = 'assets/media/' + m.photo; img.alt = lb(m); frame.appendChild(img); }
@@ -657,7 +693,7 @@
     d.media.forEach(function (m, i) {
       var li = el('li'), b = el('button'); b.type = 'button';
       b.innerHTML = '<img alt=""><span><span class="t"></span><span class="k"></span></span>';
-      b.querySelector('img').src = 'assets/media/' + m.photo;
+      if (m.photo) b.querySelector('img').src = 'assets/media/' + m.photo;
       b.querySelector('.t').textContent = lb(m);
       b.querySelector('.k').textContent = m.video ? L('video') : L('photo');
       b.addEventListener('click', function () { showItem(d, i); });
@@ -665,10 +701,10 @@
     });
     showItem(d, active || 0);
   }
-  function openDrawer(d) {
+  function openDrawer(d, at) {
     lastTrigger = document.activeElement; drawerFor = d;
     $('#tour').inert = true;
-    fillDrawer(d, 0);
+    fillDrawer(d, at || 0);
     drawer.hidden = false;
     requestAnimationFrame(function () { drawer.classList.add('open'); $('#drawerClose').focus(); });
     applyRotate();

@@ -8,6 +8,9 @@ Usage:
     python tools/build_tiles.py --force      # rebuild everything
     python tools/build_tiles.py navata dx1   # rebuild named panoramas
 
+The round logo assets/img/logo-360-beige.png is laid on the floor at the nadir of every panorama (it hides the tripod).
+The source images in images/ are not modified, the logo is applied while the tiles are cut. Use --no-logo to leave it out.
+
 Requires: pip install opencv-python numpy
 """
 import os, sys, math
@@ -22,6 +25,8 @@ OUT_THUMBS = os.path.join(ROOT, "assets", "thumbs")
 # (face size, tile size). Index in this list == {z} in the tile URL. Keep in sync with js/app.js.
 LEVELS = [(512, 512), (1536, 1536), (3072, 1536)]
 QUALITY = 86
+LOGO = os.path.join(ROOT, "assets", "img", "logo-360-beige.png")
+LOGO_RADIUS = 0.21      # angular radius of the logo seen from the camera, in radians (the tripod is about 0.09)
 FACES = ["f", "b", "l", "r", "u", "d"]
 
 
@@ -38,6 +43,30 @@ def face_map(face, size, w, h):
             ((0.5 - lat / math.pi) * h - 0.5).astype(np.float32))
 
 
+def add_logo(img):
+    """Lay the round logo on the floor below the camera, as seen on the equirectangular image (text upright when you look down facing forward)."""
+    logo = cv2.imread(LOGO, cv2.IMREAD_UNCHANGED)
+    if logo is None or logo.shape[2] < 4:
+        return img
+    h, w = img.shape[:2]
+    lh, lw = logo.shape[:2]
+    t0 = math.tan(LOGO_RADIUS)
+    y0 = int(h - (LOGO_RADIUS * 1.05) / math.pi * h)
+    ys, xs = np.mgrid[y0:h, 0:w].astype(np.float64)
+    theta = (h - ys - 0.5) / h * math.pi                 # angle from straight down
+    lon = ((xs + 0.5) / w - 0.5) * 2 * math.pi
+    r = np.tan(theta)
+    u = r * np.sin(lon) / t0                             # right
+    v = r * np.cos(lon) / t0                             # forward
+    mx = ((1 + u) / 2 * lw - 0.5).astype(np.float32)
+    my = ((1 - v) / 2 * lh - 0.5).astype(np.float32)
+    layer = cv2.remap(logo, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+    a = (layer[..., 3:4].astype(np.float32) / 255.0) * (theta <= LOGO_RADIUS)[..., None]
+    region = img[y0:h].astype(np.float32)
+    img[y0:h] = (region * (1 - a) + layer[..., :3].astype(np.float32) * a).astype(np.uint8)
+    return img
+
+
 def build(sid):
     cv2.setNumThreads(2)
     img = cv2.imread(os.path.join(SRC, sid + ".jpg"), cv2.IMREAD_COLOR)
@@ -46,6 +75,8 @@ def build(sid):
     top = LEVELS[-1][0]
     if img.shape[1] != top * 4:
         img = cv2.resize(img, (top * 4, top * 2), interpolation=cv2.INTER_AREA)
+    if "--no-logo" not in sys.argv:
+        img = add_logo(img)
     h, w = img.shape[:2]
     out = os.path.join(OUT_TILES, sid)
     for face in FACES:

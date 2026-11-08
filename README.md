@@ -34,7 +34,7 @@ then open `http://localhost:8000/`. A place can be opened directly with its id: 
 | `images/<id>.jpg` | The source equirectangular panoramas. The file name is the place id | when adding places |
 | `assets/tiles/<id>/` | Cube-map tiles made from `images/` by `tools/build_tiles.py` | generated |
 | `assets/thumbs/<id>.jpg` | Small thumbnails (place list, hotspot hover card), made by the same script | generated |
-| `assets/media/` | Portrait photos (`.jpg`) and videos (`.mp4`) shown in the Gallery | when adding media |
+| `assets/media/<scene id>/` | One folder per place (`ingresso`, `navata`, `altare`, `dx1` ... `sx3`) with its portrait photos (`.jpg`) and videos (`.mp4`) shown in the Gallery; the Ingresso folder also holds the history video, its subtitles (`.vtt`) and poster | when adding media |
 | `assets/img/` | Home photo and the domitalia360 logos | rarely |
 | `assets/fonts/` | Marcellus and Figtree (woff2) | no |
 | `vendor/marzipano.js` | The viewer library | no |
@@ -81,7 +81,7 @@ Each scene:
 ```
 
 - The order of `scenes` is the order of the previous / next buttons.
-- `media` items need a poster photo in `assets/media/`; add `video` for a clip. A place with no `media` has no Gallery button.
+- `media` items need a poster photo in `assets/media/<scene id>/` (write it as `"navata/volta.jpg"`); add `video` for a clip. A place with no `media` has no Gallery button.
 - The link from the central nave back to the entrance is marked `added: true`: the Marzipano export had no way back from that panorama.
 - **Floor plan.** The outline is drawn in `drawPlan()` in `js/app.js` (nave, two side aisles, apse, doors, pews, altar niches). It is
   schematic and was worked out from the photographs and hotspot bearings, **not surveyed**; it says "indicative" on screen. Dot positions
